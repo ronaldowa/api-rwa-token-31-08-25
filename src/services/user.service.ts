@@ -9,11 +9,12 @@ export const createUser = async (data: {
   password: string;
   kyc?: {
     cpf: string;
-    dataNascimento: Date;
+    dataNascimento: Date | string; // aceita string ou Date
     endereco: string;
   };
 }) => {
   const hashedPassword = await hashPassword(data.password);
+
   const user = await prisma.user.create({
     data: {
       name: data.name,
@@ -22,14 +23,17 @@ export const createUser = async (data: {
       kyc: {
         create: {
           cpf: data.kyc?.cpf || '',
-          dataNascimento: data.kyc?.dataNascimento || new Date(),
+          dataNascimento: data.kyc?.dataNascimento
+            ? new Date(data.kyc.dataNascimento) // converte string para Date
+            : new Date(),
           endereco: data.kyc?.endereco || '',
           status: 'inativo',
         },
       },
     },
-    include: { kyc: true },
+    include: { kyc: true }, // ✅ deve estar fora de `data`
   });
+
   return user;
 };
 
