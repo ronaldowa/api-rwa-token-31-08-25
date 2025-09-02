@@ -28,3 +28,17 @@ model KYC {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model Projeto {
+  id            Int      @id @default(autoincrement())
+  name          String
+  numContrato   String   @unique
+  precoTokenBRL Float     @default(0.0)  // <- agora tem default
+  fotos         String[]
+  totalTokens   Int
+  status        String    @default("ativo")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
