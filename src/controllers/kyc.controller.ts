@@ -71,3 +71,21 @@ export const finds = async (_req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Atualiza apenas o status do KYC pelo id
+export const updateStatus = async (req: Request, res: Response) => {
+  try {
+    const kycId = parseInt(req.params.id);
+    if (!kycId) return res.status(400).json({ error: 'KycId inválido' });
+
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status obrigatório' });
+
+    const kyc = await kycService.updateKyc(kycId, { status });
+    if (!kyc) return res.status(404).json({ error: 'KYC não encontrado' });
+
+    res.status(200).json(kyc);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};

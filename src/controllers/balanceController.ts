@@ -116,9 +116,117 @@ export const getContractAddress = async (req: Request, res: Response) => {
 // -------------------- Função mintRestricted --------------------
 
 // -------------------- Função mintRestricted --------------------
+// export const mintRestricted = async (req: Request, res: Response) => {
+//   try {
+//     const { userId, projetoId, amount } = req.body;
+
+//     // Valida parâmetros
+//     if (!userId || !projetoId || !amount) {
+//       return res.status(400).json({
+//         error: "Parâmetros 'userId', 'projetoId' e 'amount' são obrigatórios.",
+//       });
+//     }
+
+//     // Busca usuário + carteira
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       include: { cart: true },
+//     });
+//     if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
+
+//     // Busca projeto
+//     const projeto = await prisma.projeto.findUnique({ where: { id: projetoId } });
+//     if (!projeto) return res.status(404).json({ error: "Projeto não encontrado." });
+
+//     // Busca KYC
+//     const kyc = await prisma.kYC.findUnique({ where: { userId } });
+//     if (!kyc || kyc.status !== "ativo") {
+//       return res.status(403).json({ error: "Usuário não possui KYC aprovado." });
+//     }
+
+//     // Verifica se tem carteira
+//     if (!user.cart || !user.cart.publicAddress) {
+//       return res.status(400).json({ error: "Usuário não possui carteira vinculada." });
+//     }
+//     const to = user.cart.publicAddress;
+
+//     // Configura signer
+//     const mnemonic =
+//       process.env.SECRET?.trim() ||
+//       "ridge jump elder copper squeeze bar valley thumb warm emerge armed cushion";
+//     if (!ethers.Mnemonic.isValidMnemonic(mnemonic)) {
+//       return res.status(500).json({ error: "Seed phrase inválida." });
+//     }
+
+//     const signer = ethers.Wallet.fromPhrase(mnemonic).connect(provider);
+//     const contractWithSigner = contract.connect(signer);
+
+//     // 🔹 Chama verifyKyc no contrato ANTES do mint
+//     try {
+//       const kycTx = await (contractWithSigner as any).verifyKyc(to);
+//       await kycTx.wait(1);
+//       console.log(`KYC verificado on-chain para ${to}: ${kycTx.hash}`);
+//     } catch (err: any) {
+//       console.error("Erro ao verificar KYC on-chain:", err);
+//       return res.status(500).json({ error: "Falha ao registrar KYC no contrato." });
+//     }
+
+//     // Converte amount para unidades do token
+//     const decimals = await contract.decimals();
+//     const amountWei = ethers.parseUnits(amount.toString(), decimals);
+
+//     // Calcula valor de ETH a enviar
+//     const tokenPrice = await contract.TOKEN_PRICE();
+//     const valueToSend = tokenPrice * BigInt(amount);
+
+//     // Mint Restricted
+//     const tx = await (contractWithSigner as any).mintRestricted(to, amountWei, {
+//       value: valueToSend,
+//     });
+
+//     // Cria registro inicial no banco
+//     const txRecord = await prisma.txMint.create({
+//       data: {
+//         userId,
+//         projetoId,
+//         amount: parseFloat(amount.toString()),
+//         toAddress: to,
+//         txHash: tx.hash,
+//         status: "pendente",
+//       },
+//     });
+
+//     // Confirma transação
+//     const receipt = await provider.waitForTransaction(tx.hash, 1);
+
+//     await prisma.txMint.update({
+//       where: { id: txRecord.id },
+//       data: {
+//         status: receipt.status === 1 ? "confirmada" : "falha",
+//         confirmedAt: new Date(),
+//       },
+//     });
+
+//     res.json({
+//       txHash: tx.hash,
+//       message: `Transação enviada para ${to} com sucesso!`,
+//       status: receipt.status === 1 ? "confirmada" : "falha",
+//     });
+//   } catch (error: any) {
+//     console.error("Erro em mintRestricted:", error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+// -------------------- Função mintRestricted --------------------
 export const mintRestricted = async (req: Request, res: Response) => {
   try {
-    const { userId, projetoId, amount } = req.body;
+    // Converte para número se vier como string
+    let { userId, projetoId, amount } = req.body;
+    userId = typeof userId === "string" ? parseInt(userId) : userId;
+    projetoId = typeof projetoId === "string" ? parseInt(projetoId) : projetoId;
+    amount = typeof amount === "string" ? parseFloat(amount) : amount;
 
     // Valida parâmetros
     if (!userId || !projetoId || !amount) {
@@ -132,6 +240,7 @@ export const mintRestricted = async (req: Request, res: Response) => {
       where: { id: userId },
       include: { cart: true },
     });
+    
     if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
 
     // Busca projeto

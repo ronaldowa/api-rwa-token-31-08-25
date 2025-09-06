@@ -6,6 +6,7 @@ import userRoutes from './routes/user.routes';
 import kycRoutes from './routes/kyc.routes';
 import projetoRoutes from "./routes/projeto.routes";
 import balanceRoutes from "./routes/balance.routes";
+import txMintRoutes from './routes/txMintRoutes'; // Adicione esta linha
 
 dotenv.config();
 
@@ -22,4 +23,5 @@ app.use('/users', userRoutes);
 app.use('/kyc', kycRoutes);
 app.use("/projetos", projetoRoutes);
 app.use("/balance", balanceRoutes);
+app.use('/txmint', txMintRoutes); // Adicione esta linha
 export default app;

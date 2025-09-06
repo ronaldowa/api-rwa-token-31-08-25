@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createOrUpdateKyc, UpdateKyc, findId, finds } from '../controllers/kyc.controller';
+import { createOrUpdateKyc, UpdateKyc, findId, finds, updateStatus } from '../controllers/kyc.controller';
 import { upload } from '../middleware/upload';
 
 const router = Router();
@@ -15,5 +15,8 @@ router.patch('/:userId', upload.single('foto'), UpdateKyc);
 
 // Nova rota: busca por userId
 router.get('/:userId', findId);
+
+// Atualiza apenas o status do KYC pelo id
+router.patch('/:id/status', updateStatus);
 
 export default router;
