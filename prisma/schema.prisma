@@ -14,7 +14,8 @@ model User {
   email      String   @unique
   password   String
   createDate DateTime @default(now())
-
+  // Relação 1:N com RegistroCompras
+  registroCompras RegistroCompras[]
   // Relação 1:1 com KYC
   kyc        KYC?
 
@@ -46,12 +47,15 @@ model Projeto {
   id            Int      @id @default(autoincrement())
   name          String
   numContrato   String   @unique
-  precoTokenBRL Float     @default(0.0)  // Valor do token em BRL
+  precoTokenBRL Float     @default(0.0)  // Valor do token em reais (BRL)
   fotos         String[]
   totalTokens   Int
   status        String    @default("ativo")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  detalhesProjeto String
+  inicioDaCapitacao DateTime
+  dataRecebimento DateTime
 
   // Relação 1:N com TxMint
   txMints       TxMint[]
@@ -90,3 +94,15 @@ model Cart {
   user User @relation(fields: [userId], references: [id])
 }
 
+model RegistroCompras {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  valorDaCompra  Float
+  quantidadeToken Int
+  createdAt      DateTime @default(now())
+  comprovante    String   @default(dbgenerated("md5(random()::text || clock_timestamp()::text)")) 
+
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}

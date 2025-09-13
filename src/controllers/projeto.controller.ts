@@ -3,7 +3,7 @@ import * as projetoService from "../services/projeto.service";
 
 export const createProjeto = async (req: Request, res: Response) => {
   try {
-    const { name, numContrato, precoTokenBRL, totalTokens } = req.body;
+    const { name, numContrato, precoTokenBRL, totalTokens, detalhesProjeto, inicioDaCapitacao, dataRecebimento } = req.body;
 
     // extrai arquivos enviados
     const fotos = req.files ? (req.files as Express.Multer.File[]).map(f => f.filename) : [];
@@ -14,7 +14,10 @@ export const createProjeto = async (req: Request, res: Response) => {
       numContrato,
       precoTokenBRL: parseFloat(precoTokenBRL) || 0, // se não enviar, usa 0
       fotos,
-      totalTokens: parseInt(totalTokens) || 0         // obrigatório
+      totalTokens: parseInt(totalTokens) || 0,        // obrigatório
+      detalhesProjeto,
+      inicioDaCapitacao,
+      dataRecebimento
     });
 
     res.status(201).json(projeto);
@@ -47,16 +50,18 @@ export const getProjetoById = async (req: Request, res: Response) => {
 export const updateProjeto = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    const { name, numContrato, valorEth, quantidadeToken, precoEth } = req.body;
+    const { name, numContrato, quantidadeToken, precoTokenBRL, detalhesProjeto, inicioDaCapitacao, dataRecebimento } = req.body;
     const fotos = req.files ? (req.files as Express.Multer.File[]).map(f => f.filename) : undefined;
 
     const projeto = await projetoService.updateProjeto(id, {
       name,
       numContrato,
-      valorEth: valorEth ? parseFloat(valorEth) : undefined,
       fotos,
       quantidadeToken: quantidadeToken ? parseInt(quantidadeToken) : undefined,
-      precoEth: precoEth ? parseFloat(precoEth) : undefined,
+      precoTokenBRL: precoTokenBRL ? parseFloat(precoTokenBRL) : undefined,
+      detalhesProjeto,
+      inicioDaCapitacao,
+      dataRecebimento
     });
 
     res.json(projeto);
