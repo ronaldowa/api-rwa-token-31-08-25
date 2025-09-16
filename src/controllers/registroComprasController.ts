@@ -9,9 +9,9 @@ const router = Router();
  */
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { userId, valorDaCompra, quantidadeToken } = req.body;
+    const { userId, valorDaCompra, quantidadeToken, projetoId } = req.body;
 
-    if (!userId || !valorDaCompra || !quantidadeToken) {
+    if (!userId || !valorDaCompra || !quantidadeToken || !projetoId) {
       return res.status(400).json({ error: "Campos obrigatórios faltando" });
     }
 
@@ -23,7 +23,12 @@ router.post("/", async (req: Request, res: Response) => {
         userId,
         valorDaCompra,
         quantidadeToken,
+        projetoId, // vincula a compra ao projeto
         comprovante,
+      },
+      include: {
+        projeto: true, // retorna dados do projeto junto
+        user: true,    // retorna dados do usuário junto
       },
     });
 

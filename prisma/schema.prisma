@@ -24,6 +24,9 @@ model User {
 
   // Relação 1:1 com Cart
   cart       Cart?
+
+    // Relação 1:N com PixPayment
+  pixPayments PixPayment[]
 }
 
 // -------------------- KYC --------------------
@@ -44,21 +47,22 @@ model KYC {
 
 // -------------------- Projetos --------------------
 model Projeto {
-  id            Int      @id @default(autoincrement())
-  name          String
-  numContrato   String   @unique
-  precoTokenBRL Float     @default(0.0)  // Valor do token em reais (BRL)
-  fotos         String[]
-  totalTokens   Int
-  status        String    @default("ativo")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  detalhesProjeto String
+  id               Int              @id @default(autoincrement())
+  name             String
+  numContrato      String           @unique
+  precoTokenBRL    Float            @default(0.0)  // Valor do token em reais (BRL)
+  fotos            String[]
+  totalTokens      Int
+  status           String           @default("ativo")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  detalhesProjeto  String
   inicioDaCapitacao DateTime
-  dataRecebimento DateTime
+  dataRecebimento   DateTime
 
-  // Relação 1:N com TxMint
-  txMints       TxMint[]
+  // Relações
+  txMints          TxMint[]
+  compras          RegistroCompras[]  // <- um projeto tem várias compras
 }
 
 // -------------------- Registro de Mint --------------------
@@ -94,15 +98,35 @@ model Cart {
   user User @relation(fields: [userId], references: [id])
 }
 
+// -------------------- Registro de Compras --------------------
 model RegistroCompras {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  valorDaCompra  Float
-  quantidadeToken Int
-  createdAt      DateTime @default(now())
-  comprovante    String   @default(dbgenerated("md5(random()::text || clock_timestamp()::text)")) 
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  projetoId        Int       // FK para Projeto
+  valorDaCompra    Float
+  quantidadeToken  Int
+  createdAt        DateTime  @default(now())
+  comprovante      String    @default(dbgenerated("md5(random()::text || clock_timestamp()::text)")) 
 
-  user           User     @relation(fields: [userId], references: [id])
+  // Relações
+  user             User      @relation(fields: [userId], references: [id])
+  projeto          Projeto   @relation(fields: [projetoId], references: [id])
 
   @@index([userId])
+  @@index([projetoId])
+}
+
+
+model PixPayment {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  value       Float
+  status      String   @default("PENDING")
+  asaasId     String   @unique
+  qrCode      String?
+  qrCodeBase64 String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
 }

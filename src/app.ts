@@ -9,6 +9,7 @@ import kycRoutes from './routes/kyc.routes';
 import projetoRoutes from './routes/projeto.routes';
 import balanceRoutes from './routes/balance.routes';
 import registroComprasRoutes from "./routes/registroComprasRoutes";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
@@ -26,5 +27,6 @@ app.use('/kyc', kycRoutes);
 app.use('/projetos', projetoRoutes);
 app.use('/balance', balanceRoutes);
 app.use("/registro-compras", registroComprasRoutes);
+app.use("/api", authRoutes);
 
 export default app;

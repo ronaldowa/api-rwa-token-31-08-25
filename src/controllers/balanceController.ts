@@ -179,7 +179,7 @@ export const mintRestricted = async (req: Request, res: Response) => {
     if (receipt.status === 1) {
       const comprovante = tx.hash; // txHash como comprovante
       await prisma.registroCompras.create({
-        data: { userId, valorDaCompra: amount, quantidadeToken: amount, comprovante },
+        data: { userId,  projetoId, valorDaCompra: amount, quantidadeToken: amount, comprovante },
       });
     }
 
