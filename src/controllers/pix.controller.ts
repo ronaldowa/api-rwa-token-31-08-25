@@ -9,8 +9,10 @@ const prisma = new PrismaClient();
 // 1) Criar PIX imediato e registrar no DB
 export const criarPix = async (req: Request, res: Response) => {
   try {
-    const { userId, valor } = req.body;
-    if (!userId || !valor) return res.status(400).json({ error: 'userId e valor são obrigatórios' });
+    const { userId, projetoId, valor } = req.body;
+    if (!userId || !projetoId || !valor) {
+      return res.status(400).json({ error: 'userId, projetoId e valor são obrigatórios' });
+    }
 
     // Buscar user + kyc (precisa do cpf)
     const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
@@ -19,13 +21,17 @@ export const criarPix = async (req: Request, res: Response) => {
     const kyc = await prisma.kYC.findUnique({ where: { userId: user.id } });
     if (!kyc) return res.status(400).json({ error: 'KYC não cadastrado (cpf required)' });
 
-    // Chamada Asaas (sandbox)
+    // Buscar projeto
+    const projeto = await prisma.projeto.findUnique({ where: { id: Number(projetoId) } });
+    if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
+
+    // Chamada Asaas
     const body = {
       customer: { name: user.name, email: user.email, cpfCnpj: kyc.cpf },
       billingType: 'PIX',
       value: Number(valor),
-      description: 'PIX imediato - tokenização',
-      dueDate: new Date().toISOString().split('T')[0] // hoje
+      description: `PIX imediato - Projeto ${projeto.name}`,
+      dueDate: new Date().toISOString().split('T')[0]
     };
 
     const resp = await fetch('https://sandbox.asaas.com/api/v3/payments', {
@@ -38,14 +44,15 @@ export const criarPix = async (req: Request, res: Response) => {
     });
 
     const data = await resp.json();
-
     if (data.errors) return res.status(400).json({ error: data.errors });
 
-    // Salva no DB (trata UniqueConstraint se necessário)
+    // Salva no DB
     const pagamento = await prisma.pixPayment.create({
       data: {
         userId: user.id,
-value: Number(valor),  // ✅ correto        status: (data.status ?? 'PENDENTE').toUpperCase(),
+        projetoId: projeto.id, // ✅ necessário
+        value: Number(valor),
+        status: (data.status ?? 'PENDING').toUpperCase(),
         qrCode: data.pixQrCode ?? null,
         qrCodeBase64: data.pixQrCodeBase64 ?? null,
         asaasId: String(data.id)
@@ -55,10 +62,10 @@ value: Number(valor),  // ✅ correto        status: (data.status ?? 'PENDENTE')
     return res.status(201).json({ message: 'PIX gerado', pagamento });
   } catch (err: any) {
     console.error('criarPix error:', err);
-    // Se erro de unique (asaasId duplicado), trate aqui
     return res.status(500).json({ error: err.message || err });
   }
 };
+
 
 // 2) Consultar status no Asaas e atualizar DB (manual)
 export const consultarStatusPix = async (req: Request, res: Response) => {
